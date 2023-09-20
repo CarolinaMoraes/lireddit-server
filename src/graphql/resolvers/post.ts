@@ -4,7 +4,7 @@ import { GraphqlMyContext } from "../../types";
 
 export const postResolvers = {
   Query: {
-    getPosts: (
+    getPosts: async (
       _: unknown,
       args: { id: number },
       contextValue: GraphqlMyContext
@@ -12,7 +12,7 @@ export const postResolvers = {
       return contextValue.em.find(Post, {});
     },
 
-    getPost: (
+    getPost: async (
       _: unknown,
       args: { id: number },
       contextValue: GraphqlMyContext
@@ -22,7 +22,7 @@ export const postResolvers = {
   },
 
   Mutation: {
-    createPost: (
+    createPost: async (
       _: unknown,
       args: { title: string },
       contextValue: GraphqlMyContext

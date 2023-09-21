@@ -12,6 +12,8 @@ import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { postTypeDef } from "./graphql/schemas/post";
 import { postResolvers } from "./graphql/resolvers/post";
+import { userTypeDef } from "./graphql/schemas/user";
+import { userResolvers } from "./graphql/resolvers/user";
 
 dotenv.config();
 
@@ -28,8 +30,8 @@ async function main() {
   const app = express();
 
   const apolloServer = new ApolloServer({
-    typeDefs: [postTypeDef],
-    resolvers: [postResolvers],
+    typeDefs: [postTypeDef, userTypeDef],
+    resolvers: [postResolvers, userResolvers],
   });
 
   await apolloServer.start();

@@ -1,6 +1,7 @@
 import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
 import { __prod__ } from "../constants";
 import { Post } from "../entities/Post";
+import { User } from "../entities/User";
 
 const postgresOrmConfig: PostgresConnectionOptions = {
   type: "postgres",
@@ -11,8 +12,8 @@ const postgresOrmConfig: PostgresConnectionOptions = {
   database: process.env.DB_NAME,
   port: Number(process.env.DB_PORT),
   logging: !__prod__,
-  entities: [Post],
-  migrations: ["dist/migrations/**/*{.ts,.js}"],
+  entities: [Post, User],
+  migrations: ["src/migrations/**/*{.ts,.js}"],
   subscribers: ["dist/subscribers/**/*{.ts,.js}"],
   migrationsRun: true,
 };

@@ -1,6 +1,6 @@
-import { EntityNotFoundError } from "typeorm";
 import { Post } from "../../entities/Post";
-import { GraphqlMyContext } from "../../types";
+import { GraphqlCustomErrorCode, GraphqlMyContext } from "../../types";
+import { GraphQLError } from "graphql";
 
 export const postResolvers = {
   Query: {
@@ -38,7 +38,14 @@ export const postResolvers = {
         where: { id: args.id },
       });
 
-      if (!post) throw new EntityNotFoundError(Post, args.id);
+      if (!post) {
+        throw new GraphQLError("Post not found", {
+          extensions: {
+            id: args.id,
+            code: GraphqlCustomErrorCode.NOT_FOUND,
+          },
+        });
+      }
 
       post.title = args.title;
       return contextValue.em.save(Post, post);
@@ -52,7 +59,14 @@ export const postResolvers = {
         where: { id: args.id },
       });
 
-      if (!post) throw new EntityNotFoundError(Post, args.id);
+      if (!post) {
+        throw new GraphQLError("Post not found", {
+          extensions: {
+            id: args.id,
+            code: GraphqlCustomErrorCode.NOT_FOUND,
+          },
+        });
+      }
 
       await contextValue.em.remove(post);
 

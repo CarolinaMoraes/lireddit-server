@@ -2,6 +2,8 @@ import { CreateAndLoginUserInput } from "../../entities/DTO/CreateAndLoginUserIn
 import { User } from "../../entities/User";
 import { GraphqlMyContext } from "../../types";
 import argon2 from "argon2";
+import { GraphQLError } from "graphql";
+import { GraphqlCustomErrorCode } from "../../types";
 
 export const userResolvers = {
   Mutation: {
@@ -17,7 +19,9 @@ export const userResolvers = {
       });
 
       if (alreadyStoredUser) {
-        throw new Error("User already exists");
+        throw new GraphQLError("User already exists", {
+          extensions: { code: GraphqlCustomErrorCode.CONFLICT },
+        });
       }
 
       const hashedPass = await argon2.hash(userInput.password);
@@ -39,11 +43,17 @@ export const userResolvers = {
       });
 
       if (!user) {
-        throw new Error("User not found");
+        throw new GraphQLError("User not found", {
+          extensions: {
+            code: GraphqlCustomErrorCode.NOT_FOUND,
+          },
+        });
       }
 
       if (!(await argon2.verify(user.password, userInput.password))) {
-        throw new Error("Credentials are invalid");
+        throw new GraphQLError("Credentials are invalid", {
+          extensions: { code: GraphqlCustomErrorCode.UNAUTHORIZED },
+        });
       }
 
       return user;

@@ -32,6 +32,7 @@ async function main() {
   const apolloServer = new ApolloServer({
     typeDefs: [postTypeDef, userTypeDef],
     resolvers: [postResolvers, userResolvers],
+    includeStacktraceInErrorResponses: false,
   });
 
   await apolloServer.start();

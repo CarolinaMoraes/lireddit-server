@@ -7,6 +7,7 @@
     "watch": "tsc -w",
     "dev:alternative": "nodemon -L ./src/index.ts && tsc -w",
     "dev": "ts-node-dev --respawn --transpile-only ./src/index.ts",
+    "generate:migration": "npx ts-node ./node_modules/.bin/typeorm migration:generate -d ./src/index",
     "start": "node dist/index.js",
     "build": "npx tsc",
     "typeorm": "typeorm-ts-node-commonjs",

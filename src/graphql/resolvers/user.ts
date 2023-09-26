@@ -3,7 +3,11 @@ import { User } from "../../entities/User";
 import { GraphqlMyContext } from "../../types";
 import argon2 from "argon2";
 import { GraphQLError } from "graphql";
+import { ApolloServerErrorCode } from "@apollo/server/errors";
 import { GraphqlCustomErrorCode } from "../../types";
+import { validate } from "class-validator";
+import { plainToClass } from "class-transformer";
+import { getConstraintMessagesFromValidatorErrors } from "../../utils";
 
 export const userResolvers = {
   Mutation: {
@@ -13,6 +17,19 @@ export const userResolvers = {
       contextValue: GraphqlMyContext
     ): Promise<User> => {
       const { userInput } = args;
+
+      const errors = await validate(
+        plainToClass(CreateAndLoginUserInput, userInput)
+      );
+
+      if (errors.length > 0) {
+        throw new GraphQLError(
+          getConstraintMessagesFromValidatorErrors(errors),
+          {
+            extensions: { code: ApolloServerErrorCode.BAD_USER_INPUT },
+          }
+        );
+      }
 
       const alreadyStoredUser = await contextValue.em.findOne(User, {
         where: { username: userInput.username },
@@ -38,6 +55,19 @@ export const userResolvers = {
     ): Promise<User> => {
       const { userInput } = args;
 
+      const errors = await validate(
+        plainToClass(CreateAndLoginUserInput, userInput)
+      );
+
+      if (errors.length > 0) {
+        throw new GraphQLError(
+          getConstraintMessagesFromValidatorErrors(errors),
+          {
+            extensions: { code: ApolloServerErrorCode.BAD_USER_INPUT },
+          }
+        );
+      }
+
       const user = await contextValue.em.findOne(User, {
         where: { username: userInput.username },
       });
@@ -51,7 +81,7 @@ export const userResolvers = {
       }
 
       if (!(await argon2.verify(user.password, userInput.password))) {
-        throw new GraphQLError("Credentials are invalid", {
+        throw new GraphQLError("Incorrect password", {
           extensions: { code: GraphqlCustomErrorCode.UNAUTHORIZED },
         });
       }

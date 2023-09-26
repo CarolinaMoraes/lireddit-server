@@ -1,5 +1,4 @@
 export const userTypeDef = `#graphql
-
     input CreateUserInput {
         username: String!
         password: String!
@@ -10,7 +9,6 @@ export const userTypeDef = `#graphql
         createdAt: String
         updatedAt: String
         username: String!
-        password: String!
     }
 
     type Mutation {

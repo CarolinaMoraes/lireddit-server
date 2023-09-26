@@ -1,9 +1,9 @@
-export class CreateAndLoginUserInput {
-  constructor(username: string, password: string) {
-    this.username = username;
-    this.password = password;
-  }
+import { IsNotEmpty, MinLength } from "class-validator";
 
+export class CreateAndLoginUserInput {
+  @MinLength(3)
   username!: string;
+
+  @MinLength(8)
   password!: string;
 }

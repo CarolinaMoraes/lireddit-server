@@ -10,11 +10,27 @@ import { plainToClass } from "class-transformer";
 import { getConstraintMessagesFromValidatorErrors } from "../../utils";
 
 export const userResolvers = {
+  Query: {
+    me: async (
+      _: unknown,
+      args: {},
+      { req, em }: GraphqlMyContext
+    ): Promise<User | null> => {
+      if (!req.session.userId) return null;
+
+      const user = em.findOne(User, {
+        where: { id: req.session.userId },
+      });
+
+      return user;
+    },
+  },
+
   Mutation: {
     register: async (
       _: unknown,
       args: { userInput: CreateAndLoginUserInput },
-      contextValue: GraphqlMyContext
+      { em, req }: GraphqlMyContext
     ): Promise<User> => {
       const { userInput } = args;
 
@@ -31,7 +47,7 @@ export const userResolvers = {
         );
       }
 
-      const alreadyStoredUser = await contextValue.em.findOne(User, {
+      const alreadyStoredUser = await em.findOne(User, {
         where: { username: userInput.username },
       });
 
@@ -43,15 +59,21 @@ export const userResolvers = {
 
       const hashedPass = await argon2.hash(userInput.password);
 
-      return contextValue.em.save(User, {
+      const user = await em.save(User, {
         username: userInput.username,
         password: hashedPass,
       });
+
+      // store user id session
+      // this will set a cookie on the user and keep them logged in
+      req.session.userId = user.id;
+
+      return user;
     },
     login: async (
       _: unknown,
       args: { userInput: CreateAndLoginUserInput },
-      contextValue: GraphqlMyContext
+      { em, req }: GraphqlMyContext
     ): Promise<User> => {
       const { userInput } = args;
 
@@ -68,7 +90,7 @@ export const userResolvers = {
         );
       }
 
-      const user = await contextValue.em.findOne(User, {
+      const user = await em.findOne(User, {
         where: { username: userInput.username },
       });
 
@@ -85,6 +107,10 @@ export const userResolvers = {
           extensions: { code: GraphqlCustomErrorCode.UNAUTHORIZED },
         });
       }
+
+      // store user id session
+      // this will set a cookie on the user and keep them logged in
+      req.session.userId = user.id;
 
       return user;
     },

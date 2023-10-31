@@ -18,6 +18,13 @@ import { postTypeDef } from "./graphql/schemas/post";
 import { postResolvers } from "./graphql/resolvers/post";
 import { userTypeDef } from "./graphql/schemas/user";
 import { userResolvers } from "./graphql/resolvers/user";
+import { GraphqlMyContext } from "./types";
+
+declare module "express-session" {
+  interface SessionData {
+    userId?: number;
+  }
+}
 
 dotenv.config();
 
@@ -70,8 +77,8 @@ async function main() {
     cors<cors.CorsRequest>(),
     json(),
     expressMiddleware(apolloServer, {
-      context: async (_) => {
-        return { em: AppDataSource.manager };
+      context: async ({ req, res }): Promise<GraphqlMyContext> => {
+        return { em: AppDataSource.manager, req, res };
       },
     })
   );

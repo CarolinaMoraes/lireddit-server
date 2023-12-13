@@ -12,3 +12,8 @@ export enum GraphqlCustomErrorCode {
   NOT_FOUND = "NOT_FOUND",
   UNAUTHORIZED = "UNAUTHORIZED",
 }
+
+export type CustomValidationError = {
+  property: string;
+  constraints: string[];
+};

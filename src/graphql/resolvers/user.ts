@@ -7,7 +7,7 @@ import { ApolloServerErrorCode } from "@apollo/server/errors";
 import { GraphqlCustomErrorCode } from "../../types";
 import { validate } from "class-validator";
 import { plainToClass } from "class-transformer";
-import { getConstraintMessagesFromValidatorErrors } from "../../utils";
+import { getValidatorErrors } from "../../utils";
 
 export const userResolvers = {
   Query: {
@@ -38,13 +38,15 @@ export const userResolvers = {
         plainToClass(CreateAndLoginUserInput, userInput)
       );
 
+      console.log(errors);
+
       if (errors.length > 0) {
-        throw new GraphQLError(
-          getConstraintMessagesFromValidatorErrors(errors),
-          {
-            extensions: { code: ApolloServerErrorCode.BAD_USER_INPUT },
-          }
-        );
+        throw new GraphQLError("Invalid input", {
+          extensions: {
+            code: ApolloServerErrorCode.BAD_USER_INPUT,
+            validations: getValidatorErrors(errors),
+          },
+        });
       }
 
       const alreadyStoredUser = await em.findOne(User, {
@@ -82,12 +84,12 @@ export const userResolvers = {
       );
 
       if (errors.length > 0) {
-        throw new GraphQLError(
-          getConstraintMessagesFromValidatorErrors(errors),
-          {
-            extensions: { code: ApolloServerErrorCode.BAD_USER_INPUT },
-          }
-        );
+        throw new GraphQLError("Invalid input", {
+          extensions: {
+            code: ApolloServerErrorCode.BAD_USER_INPUT,
+            validations: getValidatorErrors(errors),
+          },
+        });
       }
 
       const user = await em.findOne(User, {

@@ -1,17 +1,17 @@
 import { ValidationError } from "class-validator";
+import { CustomValidationError } from "../types";
 
-export function getConstraintMessagesFromValidatorErrors(
+export function getValidatorErrors(
   errors: ValidationError[]
-): string {
-  const constraints = errors.reduce(
-    (acc: string[], currentError: ValidationError) => {
-      if (currentError.constraints) {
-        acc.push(...Object.values(currentError.constraints));
-      }
-      return acc;
-    },
-    []
-  );
+): CustomValidationError[] {
+  const validationErrors = errors.map((error) => {
+    const constraints = Object.values(error?.constraints || {});
 
-  return constraints.join(",");
+    return {
+      property: error.property,
+      constraints,
+    };
+  });
+
+  return validationErrors;
 }

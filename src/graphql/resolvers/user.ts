@@ -55,7 +55,15 @@ export const userResolvers = {
 
       if (alreadyStoredUser) {
         throw new GraphQLError("User already exists", {
-          extensions: { code: GraphqlCustomErrorCode.CONFLICT },
+          extensions: {
+            code: GraphqlCustomErrorCode.CONFLICT,
+            validations: [
+              {
+                property: "username",
+                constraints: ["User already exists"],
+              },
+            ],
+          },
         });
       }
 

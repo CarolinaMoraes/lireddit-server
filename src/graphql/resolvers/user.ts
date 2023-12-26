@@ -108,13 +108,27 @@ export const userResolvers = {
         throw new GraphQLError("User not found", {
           extensions: {
             code: GraphqlCustomErrorCode.NOT_FOUND,
+            validations: [
+              {
+                property: "username",
+                constraints: ["Username doesn't exist"],
+              },
+            ],
           },
         });
       }
 
       if (!(await argon2.verify(user.password, userInput.password))) {
         throw new GraphQLError("Incorrect password", {
-          extensions: { code: GraphqlCustomErrorCode.UNAUTHORIZED },
+          extensions: {
+            code: GraphqlCustomErrorCode.UNAUTHORIZED,
+            validations: [
+              {
+                property: "password",
+                constraints: ["Incorrect password"],
+              },
+            ],
+          },
         });
       }
 

@@ -8,6 +8,7 @@ import { GraphqlCustomErrorCode } from "../../types";
 import { validate } from "class-validator";
 import { plainToClass } from "class-transformer";
 import { getValidatorErrors } from "../../utils";
+import { COOKIE_NAME } from "../../constants";
 
 export const userResolvers = {
   Query: {
@@ -137,6 +138,19 @@ export const userResolvers = {
       req.session.userId = user.id;
 
       return user;
+    },
+    logout: (_: unknown, args: {}, { req, res }: GraphqlMyContext) => {
+      return new Promise((resolve) => {
+        req.session.destroy((err) => {
+          res.clearCookie(COOKIE_NAME);
+          if (err) {
+            resolve(false);
+            return;
+          }
+
+          resolve(true);
+        });
+      });
     },
   },
 };

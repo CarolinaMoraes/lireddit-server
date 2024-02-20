@@ -14,6 +14,7 @@ export const userTypeDef = `#graphql
     type Mutation {
         register(userInput: CreateUserInput!): User
         login(userInput: CreateUserInput!): User
+        logout: Boolean
     }
 
     type Query {

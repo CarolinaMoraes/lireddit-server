@@ -4,7 +4,7 @@ import { json } from "body-parser";
 import "reflect-metadata";
 
 import { DataSource } from "typeorm";
-import { __prod__ } from "./constants";
+import { COOKIE_NAME, __prod__ } from "./constants";
 import dotenv from "dotenv";
 import { ormConfig } from "./config/orm.config";
 
@@ -46,7 +46,7 @@ async function main() {
   // Should run before ApolloMiddleware
   app.use(
     session({
-      name: "qid",
+      name: COOKIE_NAME,
       store: new RedisStore({
         client: redisClient,
         prefix: "lireddit:",

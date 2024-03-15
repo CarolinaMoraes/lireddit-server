@@ -1,4 +1,4 @@
-import { CreateAndLoginUserInput } from "../../entities/DTO/CreateAndLoginUserInput";
+import { CreateUserInput } from "../../entities/DTO/CreateUserInput";
 import { User } from "../../entities/User";
 import { GraphqlMyContext } from "../../types";
 import argon2 from "argon2";
@@ -9,6 +9,7 @@ import { validate } from "class-validator";
 import { plainToClass } from "class-transformer";
 import { getValidatorErrors } from "../../utils";
 import { COOKIE_NAME } from "../../constants";
+import { LoginUserInput } from "../../entities/DTO/LoginUserInput";
 
 export const userResolvers = {
   Query: {
@@ -30,16 +31,12 @@ export const userResolvers = {
   Mutation: {
     register: async (
       _: unknown,
-      args: { userInput: CreateAndLoginUserInput },
+      args: { userInput: CreateUserInput },
       { em, req }: GraphqlMyContext
     ): Promise<User> => {
       const { userInput } = args;
 
-      const errors = await validate(
-        plainToClass(CreateAndLoginUserInput, userInput)
-      );
-
-      console.log(errors);
+      const errors = await validate(plainToClass(CreateUserInput, userInput));
 
       if (errors.length > 0) {
         throw new GraphQLError("Invalid input", {
@@ -50,9 +47,14 @@ export const userResolvers = {
         });
       }
 
-      const alreadyStoredUser = await em.findOne(User, {
-        where: { username: userInput.username },
-      });
+      const alreadyStoredUser = await em
+        .getRepository(User)
+        .createQueryBuilder("user")
+        .where("user.username = :username", {
+          username: userInput.username,
+        })
+        .orWhere("user.email = :email", { email: userInput.email })
+        .getOne();
 
       if (alreadyStoredUser) {
         throw new GraphQLError("User already exists", {
@@ -73,6 +75,7 @@ export const userResolvers = {
       const user = await em.save(User, {
         username: userInput.username,
         password: hashedPass,
+        email: userInput.email
       });
 
       // store user id session
@@ -83,14 +86,12 @@ export const userResolvers = {
     },
     login: async (
       _: unknown,
-      args: { userInput: CreateAndLoginUserInput },
+      args: { userInput: LoginUserInput },
       { em, req }: GraphqlMyContext
     ): Promise<User> => {
       const { userInput } = args;
 
-      const errors = await validate(
-        plainToClass(CreateAndLoginUserInput, userInput)
-      );
+      const errors = await validate(plainToClass(LoginUserInput, userInput));
 
       if (errors.length > 0) {
         throw new GraphQLError("Invalid input", {
@@ -101,9 +102,14 @@ export const userResolvers = {
         });
       }
 
-      const user = await em.findOne(User, {
-        where: { username: userInput.username },
-      });
+      const user = await em
+        .getRepository(User)
+        .createQueryBuilder("user")
+        .where("user.username = :username", {
+          username: userInput.usernameOrEmail,
+        })
+        .orWhere("user.email = :email", { email: userInput.usernameOrEmail })
+        .getOne();
 
       if (!user) {
         throw new GraphQLError("User not found", {
@@ -151,6 +157,14 @@ export const userResolvers = {
           resolve(true);
         });
       });
+    },
+    forgotPassword: async (
+      _: unknown,
+      args: { email: string },
+      { req, res, em }: GraphqlMyContext
+    ) => {
+      // const user = await em.findOne(User, {});
+      return true;
     },
   },
 };

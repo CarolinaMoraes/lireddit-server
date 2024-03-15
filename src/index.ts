@@ -19,6 +19,8 @@ import { postResolvers } from "./graphql/resolvers/post";
 import { userTypeDef } from "./graphql/schemas/user";
 import { userResolvers } from "./graphql/resolvers/user";
 import { GraphqlMyContext } from "./types";
+import { sendEmail } from "./utils/sendEmail";
+import { User } from "./entities/User";
 
 declare module "express-session" {
   interface SessionData {

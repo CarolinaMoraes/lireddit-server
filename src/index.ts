@@ -9,8 +9,8 @@ import dotenv from "dotenv";
 import { ormConfig } from "./config/orm.config";
 
 import RedisStore from "connect-redis";
-import session, { Store } from "express-session";
-import { createClient } from "redis";
+import session from "express-session";
+import Redis from "ioredis";
 
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
@@ -19,8 +19,6 @@ import { postResolvers } from "./graphql/resolvers/post";
 import { userTypeDef } from "./graphql/schemas/user";
 import { userResolvers } from "./graphql/resolvers/user";
 import { GraphqlMyContext } from "./types";
-import { sendEmail } from "./utils/sendEmail";
-import { User } from "./entities/User";
 
 declare module "express-session" {
   interface SessionData {
@@ -40,8 +38,7 @@ async function main() {
     console.error("Error during Data source initialization", error);
   }
 
-  const redisClient = createClient();
-  redisClient.connect().catch(console.error);
+  const redisClient = new Redis();
 
   const app = express();
 
@@ -86,7 +83,7 @@ async function main() {
     json(),
     expressMiddleware(apolloServer, {
       context: async ({ req, res }): Promise<GraphqlMyContext> => {
-        return { em: AppDataSource.manager, req, res };
+        return { em: AppDataSource.manager, req, res, redis: redisClient };
       },
     })
   );

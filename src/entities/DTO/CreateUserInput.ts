@@ -7,6 +7,6 @@ export class CreateUserInput {
   @MinLength(8)
   password!: string;
 
-  @IsEmail()
+  @IsEmail({}, { message: "Email is not valid" })
   email!: string;
 }

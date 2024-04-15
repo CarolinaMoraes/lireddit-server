@@ -8,8 +8,10 @@ import { GraphqlCustomErrorCode } from "../../types";
 import { validate } from "class-validator";
 import { plainToClass } from "class-transformer";
 import { getValidatorErrors } from "../../utils";
-import { COOKIE_NAME } from "../../constants";
+import { COOKIE_NAME, FORGOT_PASSWORD_PREFIX } from "../../constants";
 import { LoginUserInput } from "../../entities/DTO/LoginUserInput";
+import { sendEmail } from "../../utils/sendEmail";
+import { v4 } from "uuid";
 
 export const userResolvers = {
   Query: {
@@ -75,7 +77,7 @@ export const userResolvers = {
       const user = await em.save(User, {
         username: userInput.username,
         password: hashedPass,
-        email: userInput.email
+        email: userInput.email,
       });
 
       // store user id session
@@ -161,10 +163,97 @@ export const userResolvers = {
     forgotPassword: async (
       _: unknown,
       args: { email: string },
-      { req, res, em }: GraphqlMyContext
+      { req, res, em, redis }: GraphqlMyContext
     ) => {
-      // const user = await em.findOne(User, {});
+      const user = await em.findOne(User, { where: { email: args.email } });
+
+      if (!user) {
+        // the email is not in the db
+        return;
+      }
+
+      const token = v4();
+
+      await redis.set(
+        FORGOT_PASSWORD_PREFIX + token,
+        user.id,
+        "EX",
+        1000 * 60 * 60 * 24 * 3 // 3 days
+      );
+
+      await sendEmail(
+        args.email,
+        `<a href="http://localhost:3000/change-password/${token}">Reset password</a>`
+      );
+
       return true;
+    },
+    changePassword: async (
+      _: unknown,
+      args: { token: string; newPassword: string },
+      { req, res, em, redis }: GraphqlMyContext
+    ): Promise<User> => {
+      if (args.newPassword.length < 8) {
+        throw new GraphQLError("Invalid input", {
+          extensions: {
+            code: ApolloServerErrorCode.BAD_USER_INPUT,
+            validations: [
+              {
+                property: "newPassword",
+                constraints: ["Password must have at least 8 characters"],
+              },
+            ],
+          },
+        });
+      }
+
+      const redisKey = FORGOT_PASSWORD_PREFIX + args.token;
+      const userId = await redis.get(redisKey);
+
+      if (!userId) {
+        throw new GraphQLError("Invalid input", {
+          extensions: {
+            code: ApolloServerErrorCode.BAD_USER_INPUT,
+            validations: [
+              {
+                property: "token",
+                constraints: [
+                  "The request for this password change has expired",
+                ],
+              },
+            ],
+          },
+        });
+      }
+
+      const user = await em.findOne(User, { where: { id: parseInt(userId) } });
+
+      if (!user) {
+        throw new GraphQLError("User not found", {
+          extensions: {
+            code: GraphqlCustomErrorCode.NOT_FOUND,
+            validations: [
+              {
+                property: "username",
+                constraints: ["User no longer exists"],
+              },
+            ],
+          },
+        });
+      }
+
+      user.password = await argon2.hash(args.newPassword);
+
+      await em.save(user);
+
+      // removing this key from redis ensuring that the user can't use the same token again
+      // to change their password
+      await redis.del(redisKey);
+
+      // login the user after change password
+      req.session.userId = user.id;
+
+      return user;
     },
   },
 };

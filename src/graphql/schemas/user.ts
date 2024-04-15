@@ -23,6 +23,7 @@ export const userTypeDef = `#graphql
         login(userInput: LoginUserInput!): User
         logout: Boolean
         forgotPassword(email: String!): Boolean
+        changePassword(token: String!, newPassword: String!): User
     }
 
     type Query {

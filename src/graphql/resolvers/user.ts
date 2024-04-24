@@ -168,8 +168,17 @@ export const userResolvers = {
       const user = await em.findOne(User, { where: { email: args.email } });
 
       if (!user) {
-        // the email is not in the db
-        return;
+        throw new GraphQLError("Invalid email", {
+          extensions: {
+            code: GraphqlCustomErrorCode.NOT_FOUND,
+            validations: [
+              {
+                property: "email",
+                constraints: ["No user found with this email"],
+              },
+            ],
+          },
+        });
       }
 
       const token = v4();

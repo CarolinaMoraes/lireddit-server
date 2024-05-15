@@ -2,9 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { Post } from "./Post";
 
 @Entity({ name: "user" })
 export class User {
@@ -25,4 +27,7 @@ export class User {
 
   @Column({ type: "text", unique: true })
   email!: string;
+
+  @OneToMany(() => Post, (post) => post.author)
+  posts?: Post[];
 }

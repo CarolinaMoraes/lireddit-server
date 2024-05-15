@@ -20,6 +20,7 @@ export const userResolvers = {
       args: {},
       { req, em }: GraphqlMyContext
     ): Promise<User | null> => {
+
       if (!req.session.userId) return null;
 
       const user = em.findOne(User, {
@@ -112,6 +113,7 @@ export const userResolvers = {
         })
         .orWhere("user.email = :email", { email: userInput.usernameOrEmail })
         .getOne();
+
 
       if (!user) {
         throw new GraphQLError("User not found", {

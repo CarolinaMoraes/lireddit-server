@@ -2,9 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { User } from "./User";
 
 @Entity({ name: "post" })
 export class Post {
@@ -19,4 +21,16 @@ export class Post {
 
   @Column({ type: "text" })
   title!: string;
+
+  @Column({ type: "number", nullable: true })
+  authorId?: number;
+
+  @ManyToOne(() => User, (user) => user.posts, { nullable: true })
+  author?: User;
+
+  @Column()
+  text!: string;
+
+  @Column({ type: "int", default: 0 })
+  points!: number;
 }

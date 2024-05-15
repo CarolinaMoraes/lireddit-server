@@ -80,13 +80,15 @@ async function main() {
     })
   );
 
-  app.use(isAuthenticated);
-
   app.use(
     "/graphql",
     json(),
     expressMiddleware(apolloServer, {
       context: async ({ req, res }): Promise<GraphqlMyContext> => {
+
+        // Check if the user is logged and if they aren't the request won't go forward
+        isAuthenticated(req);
+
         return { em: AppDataSource.manager, req, res, redis: redisClient };
       },
     })

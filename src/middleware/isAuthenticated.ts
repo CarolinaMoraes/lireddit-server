@@ -1,12 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { GraphQLError } from "graphql";
 import { GraphqlCustomErrorCode } from "../types";
-import fs from "fs";
 
 export const isAuthenticated = (
   req: Request,
-  res: Response,
-  next: NextFunction
 ): void => {
   const insecureOperations = ["register", "login", "forgotpassword"];
 
@@ -14,7 +11,6 @@ export const isAuthenticated = (
     !req.body ||
     !req.body.operationName ||
     insecureOperations.includes(req.body.operationName.toLowerCase())) {
-    next();
     return;
   }
 
@@ -26,6 +22,4 @@ export const isAuthenticated = (
       },
     });
   }
-
-  next();
 };

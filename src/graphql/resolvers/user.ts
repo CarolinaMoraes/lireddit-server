@@ -132,7 +132,7 @@ export const userResolvers = {
       if (!(await argon2.verify(user.password, userInput.password))) {
         throw new GraphQLError("Incorrect password", {
           extensions: {
-            code: GraphqlCustomErrorCode.UNAUTHORIZED,
+            code: ApolloServerErrorCode.BAD_USER_INPUT,
             validations: [
               {
                 property: "password",

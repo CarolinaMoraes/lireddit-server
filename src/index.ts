@@ -19,6 +19,7 @@ import { postResolvers } from "./graphql/resolvers/post";
 import { userTypeDef } from "./graphql/schemas/user";
 import { userResolvers } from "./graphql/resolvers/user";
 import { GraphqlMyContext } from "./types";
+import { isAuthenticated } from "./middleware/isAuthenticated";
 
 declare module "express-session" {
   interface SessionData {
@@ -41,6 +42,7 @@ async function main() {
   const redisClient = new Redis();
 
   const app = express();
+  app.use(express.json());
 
   // Should run before ApolloMiddleware
   app.use(
@@ -60,7 +62,7 @@ async function main() {
       },
       resave: false, // required: force lightweight session keep alive (touch)
       saveUninitialized: false, // recommended: only save session when data exists
-      secret: "M5nYQVKwzFYuzcyI7HwkZ3sl5GDaXues",
+      secret: process.env.REDIS_SECRET || "",
     })
   );
 
@@ -78,6 +80,8 @@ async function main() {
     })
   );
 
+  app.use(isAuthenticated);
+
   app.use(
     "/graphql",
     json(),
@@ -88,8 +92,8 @@ async function main() {
     })
   );
 
-  app.listen(4000, () => {
-    console.log("Listening on port 4000");
+  app.listen(process.env.SERVER_PORT || 4000, () => {
+    console.log(`Listening on port ${process.env.PORT || 4000}`);
   });
 }
 
